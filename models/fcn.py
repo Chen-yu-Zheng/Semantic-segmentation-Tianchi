@@ -51,6 +51,7 @@ class FCN16s(nn.Module):
             self.pretrained = vgg16(pretrained=pretrained_base).features
         else:
             raise RuntimeError('unknown backbone: {}'.format(backbone))
+        #This 24 is different among vggs, bns, etc
         self.pool4 = nn.Sequential(*self.pretrained[:24])
         self.pool5 = nn.Sequential(*self.pretrained[24:])
         self.head = _FCNHead(512, nclass, norm_layer)
@@ -148,7 +149,6 @@ class _FCNHead(nn.Module):
         return self.block(x)
 
 '''
-TO DO
 def get_fcn32s(dataset='pascal_voc', backbone='vgg16', pretrained=False, root='~/.torch/models',
                pretrained_base=True, **kwargs):
     acronyms = {
@@ -221,6 +221,11 @@ def get_fcn8s_vgg16_voc(**kwargs):
     return get_fcn8s('pascal_voc', 'vgg16', **kwargs)
 '''
 
+
 if __name__ == '__main__':
-    model = FCN16s(21)
-    print(model)
+    model = FCN8s(nclass= 21)
+    x = torch.rand((1,3,224,224))
+    out = model(x)
+    print(out[0])
+    print(out[0].shape)
+    

@@ -188,6 +188,5 @@ def vgg19_bn(pretrained=False, **kwargs):
 if __name__ == '__main__':
     img = torch.randn((4, 3, 480, 480))
     model = vgg16(pretrained=False)
-    out = model(img)
-    print(model)
+    print(model.features)
 
