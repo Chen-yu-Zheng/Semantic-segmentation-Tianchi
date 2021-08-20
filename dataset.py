@@ -1,5 +1,6 @@
 import torch
 import cv2
+from torch.utils.data import dataset
 from utils.rle2img import *
 #from utils.figure import *
 import torchvision.transforms as T
@@ -55,32 +56,49 @@ def get_TianchiDataset():
     return dataset
 
 
-
+'''
 def get_mean_std():
     dataset = get_TianchiDataset()
-    means = []
-    stds = []
-    sum = 0
-    std = 0
-    for channel in range(3):
-        for i in range(len(dataset)):
-            img = dataset[i][0][channel]
-            sum += img.sum().item()
-        mean = sum / (len(dataset)*configs.IMAGE_SIZE*configs.IMAGE_SIZE)
-        means.append(mean)
+    mean = torch.zeros(3)
+    std = torch.zeros(3)
 
-        for i in range(len(dataset)):
-            img = dataset[i][0][channel]
-            std += ((img - mean) * (img - mean)).sum().item()
-        std = std / ((len(dataset)*configs.IMAGE_SIZE*configs.IMAGE_SIZE) - 1)
-        std = std ** 0.5
-        stds.append(std)
     
     print(means)
     print(stds)
+'''
+
+
+def getStat(train_data):
+    '''
+    Compute mean and variance for training data
+    :param train_data: 自定义类Dataset(或ImageFolder即可)
+    :return: (mean, std)
+    '''
+    print('Compute mean and variance for training data.')
+    print(len(train_data))
+
+    mean = torch.zeros(3)
+    std = torch.zeros(3)
+
+    for X, _ in train_data:
+        for d in range(3):
+            mean[d] += X[d, :, :].mean()
+            std[d] += (X[d, :, :].pow(2)).sum()
+    mean.div_(len(train_data))
+    std -= len(train_data) * configs.IMAGE_SIZE * configs.IMAGE_SIZE * mean.pow(2)
+    std.div_(len(train_data) * configs.IMAGE_SIZE * configs.IMAGE_SIZE - 1)
+    std.pow_(0.5)
+    return list(mean.numpy()), list(std.numpy())
 
 def main():
-    get_mean_std()
+    mean, std = getStat(get_TianchiDataset())
+    print(mean)
+    print(std)
+
 
 if __name__ == '__main__':
     main()
+'''
+[0.40464398, 0.42690134, 0.39236653]
+[0.20213476, 0.18353915, 0.17596193]
+'''

@@ -27,12 +27,17 @@ def main():
 
     torch.manual_seed(opt.seed)
     if torch.cuda.is_available() and opt.cuda:
+        device = torch.device('cuda')
         torch.cuda.manual_seed(opt.seed)
+        cudnn.benchmark = True
 
-    # set cudnn
-    cudnn.benchmark = True
     if torch.cuda.is_available() and not opt.cuda:
+        device = torch.device('cpu')
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
+    
+    if not torch.cuda.is_available():
+        device = torch.device('cpu')
+        print("WARNING: You use a CPU device, so you should probably run with --cuda")
 
 
     dataset = get_TianchiDataset()
