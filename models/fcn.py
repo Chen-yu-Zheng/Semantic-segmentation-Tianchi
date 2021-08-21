@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from backbones.vgg import vgg16
+from models.backbones.vgg import vgg16
 
 __all__ = ['get_fcn32s', 'get_fcn16s', 'get_fcn8s',
            'get_fcn32s_vgg16_voc', 'get_fcn16s_vgg16_voc', 'get_fcn8s_vgg16_voc']

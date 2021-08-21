@@ -2,7 +2,6 @@ import torch
 import cv2
 from torch.utils.data import dataset
 from utils.rle2img import *
-#from utils.figure import *
 import torchvision.transforms as T
 from torch.utils import data as D
 import configs
@@ -18,8 +17,8 @@ class TianChiDataset(D.Dataset):
             T.ToPILImage(),
             T.Resize(configs.IMAGE_SIZE),
             T.ToTensor(),
-            # T.Normalize([0.625, 0.448, 0.688],
-            #             [0.131, 0.177, 0.101]),
+            T.Normalize([0.40464398, 0.42690134, 0.39236653],
+                        [0.20213476, 0.18353915, 0.17596193])
         ])
 
         self.transform_mask = torch.tensor
