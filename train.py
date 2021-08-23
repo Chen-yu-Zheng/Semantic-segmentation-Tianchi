@@ -4,7 +4,6 @@ import yaml
 import logging
 import time
 import os
-import shutil
 import sys
 import glob
 
