@@ -5,3 +5,7 @@ ROOT = 'data/train_mask.csv'
 RANDOMSEED = 66
 WORKERS = 2
 BATCHSIZE = 16
+NITER = 150
+LOG_FREQUENCY = 200
+
+LR = 0.01
