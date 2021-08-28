@@ -45,18 +45,18 @@ def train(epoch, net, train_loader, criterion, opt, device, optimizer, log, writ
         loss.backward()
         optimizer.step()
 
-        loss_epoch = loss_epoch + loss.item()
+        loss_epoch = loss_epoch + loss.item() / opt.batchSize
 
-        writer.add_scalar("loss/train", loss.item(), global_step=cur_step)
+        writer.add_scalar("loss/train", loss.item() / opt.batchSize, global_step=cur_step)
 
         if step % opt.log_frequency == 0 or step == len(train_loader) - 1:
             log.info(
                 "Train: [{:d}/{:d}], Step: {:d}/{:d}, Loss: {:.4f} "
-                .format(epoch + 1, opt.niter, step, len(train_loader) - 1, loss))
+                .format(epoch + 1, opt.niter, step, len(train_loader) - 1, loss.item() / opt.batchSize))
         cur_step += 1
 
-    loss_epoch = loss_epoch / (len(train_loader) * opt.batchSize)
-    
+    loss_epoch = loss_epoch / len(train_loader)
+    writer.add_scalar("loss/train_epoch", loss_epoch, global_step=epoch)
     log.info("Train: [{:d}/{}], Epoch_avg_loss: {:.4f}".format(epoch + 1, opt.niter, loss_epoch))
     return loss_epoch
 
@@ -69,29 +69,51 @@ def val(opt, epoch, net, val_loader, criterion, device, log, writer, cur_step):
         images = images.to(device)
         labels = labels.to(device)
 
-        output = net(images)
+        output = net(images)[0]
         loss = criterion(output, labels)
 
-        loss_epoch = loss_epoch + loss.item()
+        loss_epoch = loss_epoch + loss.item() / opt.batchSize
 
         if step % opt.log_frequency == 0 or step == len(val_loader) - 1:
                 log.info(
                     "Valid: [{:d}/{:d}], Step {:d}/{:d} Loss {:.4f}".format(
-                        epoch + 1, opt.niter, step, len(val_loader) - 1, loss))
+                        epoch + 1, opt.niter, step, len(val_loader) - 1, loss.item() / opt.batchSize))
 
-    writer.add_scalar("loss/test", loss_epoch, global_step=cur_step)
-
-    loss_epoch = loss_epoch / (len(val_loader) * opt.batchSize)
-
+    loss_epoch = loss_epoch / len(val_loader)
+    writer.add_scalar("loss/val", loss_epoch, global_step=cur_step)
     log.info("Valid: [{:d}/{:d}], Loss {:.4f}".format(epoch + 1, opt.niter, loss_epoch))
 
     return loss_epoch
 
 
-def main():
+def test(opt, net, test_loader, criterion, device, log, writer):
+    net.eval()
+    loss_epoch = 0
+    cur_step = 0
+    for step, (images, labels) in enumerate(test_loader):
+        images = images.to(device)
+        labels = labels.to(device)
 
+        output = net(images)[0]
+        loss = criterion(output, labels)
+
+        loss_epoch = loss_epoch + loss.item() / opt.batchSize
+
+        if step % opt.log_frequency == 0 or step == len(test_loader) - 1:
+                log.info(
+                    "Test: Step {:d}/{:d} Loss {:.4f}".format(
+                      step, len(test_loader) - 1, loss.item() / opt.batchSize))
+        cur_step += 1
+
+    loss_epoch = loss_epoch / len(test_loader)
+    writer.add_scalar("loss/test", loss_epoch, global_step=cur_step)
+    log.info("Test: Loss {:.4f}".format(loss_epoch))
+
+    return loss_epoch
+
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', default='cifar10', help='cifar10 | cifar100')
+    parser.add_argument('--dataset', default='tianchi', help='cifar10 | cifar100')
     parser.add_argument('--dataroot', default=configs.ROOT, help='path to dataset')
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=configs.WORKERS)
     parser.add_argument('--batchSize', type=int, default=configs.BATCHSIZE, help='input batch size')
@@ -101,7 +123,7 @@ def main():
     parser.add_argument('--cuda'  , action='store_false', help='enables cuda')
     parser.add_argument('--seed'  , type=int, default=configs.RANDOMSEED, help='input random seed')
     #parser.add_argument('--save', default='exps/' + time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), help='folder to store log files, model checkpoints')
-    parser.add_argument('--save', default='exp1', help='folder to store log files, model checkpoints')
+    parser.add_argument('--save', default='exp', help='folder to store log files, model checkpoints')
     opt = parser.parse_args()
     print(opt)
 
@@ -136,6 +158,10 @@ def main():
     create_exp_dir(os.path.join("exps", opt.exp_name),
                 scripts_to_save=glob.glob('*.py'))
 
+    #checkpoints
+    if not os.path.exists(os.path.join("exps", opt.exp_name, 'checkpoints')):
+            os.mkdir(os.path.join("exps", opt.exp_name, 'checkpoints'))
+
     #确定device为gpu/cpu
     torch.manual_seed(opt.seed)
     if torch.cuda.is_available() and opt.cuda:
@@ -155,7 +181,7 @@ def main():
     dataset = get_TianchiDataset()
     train1_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train1_size
-    train1_dataset, _ = random_split(dataset, [train1_size, test_size])
+    train1_dataset, test_dataset = random_split(dataset, [train1_size, test_size])
     train_size = int(0.8 * train1_size)
     val_size = train1_size - train_size
     train_dataset, val_dataset = random_split(train1_dataset, [train_size, val_size])
@@ -170,33 +196,46 @@ def main():
                                                 shuffle=True, num_workers=int(opt.workers))
 
     val_loader = DataLoader(dataset=val_dataset, batch_size=opt.batchSize,\
-                                                shuffle=False, num_workers=int(opt.workers))  
+                                                shuffle=False, num_workers=int(opt.workers))
     
-    net = FCN8s(nclass= 2)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=opt.batchSize,\
+                                                shuffle=False, num_workers=int(opt.workers)) 
+    
+    net = FCN8s(nclass= 1)
     net.to(device)
     print(net)
 
+    # x = torch.rand((1,3,configs.IMAGE_SIZE, configs.IMAGE_SIZE)).to(device)
+    # out = net(x)[0]
+    # print(out)
+    # print(out.shape)
+    # print(train_dataset[0][1].shape)
+    # sys.exit()
+
     criterion = DiceLoss()
 
-    for epoch in range(1,opt.niter+1):
-        if epoch > 120:
-            optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9, weight_decay=0.0005)
-        elif epoch > 80:
-            optimizer = optim.SGD(net.parameters(), lr=0.005, momentum=0.9, weight_decay=0.0005)
+    for epoch in range(opt.niter):
+        if epoch > 90:
+            optimizer = optim.SGD(net.parameters(), lr=configs.LR / 25, momentum=0.9, weight_decay=0.0005)
+        elif epoch > 60:
+            optimizer = optim.SGD(net.parameters(), lr=configs.LR / 5, momentum=0.9, weight_decay=0.0005)
         else:
-            optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)
+            optimizer = optim.SGD(net.parameters(), lr=configs.LR, momentum=0.9, weight_decay=0.0005)
 
         #train
         train_loss = train(epoch, net, train_loader, criterion, opt, device, optimizer, log, writer)
 
         #valid
         cur_step = (epoch + 1) * len(train_loader)
-        test_loss = val(opt, epoch, net, val_loader, criterion, device, log, writer, cur_step)
+        val_loss = val(opt, epoch, net, val_loader, criterion, device, log, writer, cur_step)
 
         if epoch % 10 == 0:
             # do checkpointing
             torch.save(net.state_dict(), "exps/%s/checkpoints/epoch_%d.pth" %
                         (opt.exp_name, epoch))
+        
+    #test
+    test_loss = test(opt, net, test_loader, criterion, device, log, writer)
 
 if __name__ == '__main__':
     main()
