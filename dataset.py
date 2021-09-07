@@ -1,10 +1,13 @@
+from matplotlib.pyplot import imread
 import torch
 import cv2
-from torch.utils.data import dataset
 from utils.rle2img import *
 import torchvision.transforms as T
 from torch.utils import data as D
 import configs
+import albumentations as A
+import pandas as pd
+
 
 class TianChiDataset(D.Dataset):
     def __init__(self, paths, rles, test_mode=False):
@@ -13,14 +16,19 @@ class TianChiDataset(D.Dataset):
         self.test_mode = test_mode
         
         self.len = len(paths)
+
+        self.transform = A.Compose([
+            A.Resize(configs.IMAGE_SIZE, configs.IMAGE_SIZE),
+            A.HorizontalFlip(p=0.5),
+            # A.VerticalFlip(p=0.5),
+            # A.RandomRotate90()
+        ])
+
         self.transform_img = T.Compose([
-            T.ToPILImage(),
-            T.Resize(configs.IMAGE_SIZE),
             T.ToTensor(),
             T.Normalize([0.40464398, 0.42690134, 0.39236653],
                         [0.20213476, 0.18353915, 0.17596193])
         ])
-
         self.transform_mask = torch.tensor
         
     # get data operation
@@ -28,12 +36,13 @@ class TianChiDataset(D.Dataset):
         img = cv2.imread(self.paths[index])
         if not self.test_mode:
             mask = rle_decode(self.rles[index])
-            #though mask = '', it can be decoded to 512*512 matrix
-            img = self.transform_img(img)
-            mask = self.transform_mask(mask)
+            augments = self.transform(image=img, mask=mask)
+
+            img = self.transform_img(augments['image'])
+            mask = self.transform_mask(augments['mask']).float()
             return img, mask
         else:
-            return self.as_tensor(img), ''        
+            return self.transform_img(img), ''        
     
     def __len__(self):
         """
@@ -49,22 +58,10 @@ def get_TianchiDataset():
 
     dataset = TianChiDataset(
         train_mask['name'].values,
-        train_mask['mask'].values,
+        train_mask['mask'].values,      
         False
     )
     return dataset
-
-
-'''
-def get_mean_std():
-    dataset = get_TianchiDataset()
-    mean = torch.zeros(3)
-    std = torch.zeros(3)
-
-    
-    print(means)
-    print(stds)
-'''
 
 
 def getStat(train_data):
@@ -89,6 +86,8 @@ def getStat(train_data):
     std.pow_(0.5)
     return list(mean.numpy()), list(std.numpy())
 
+
+
 def main():
     mean, std = getStat(get_TianchiDataset())
     print(mean)
@@ -96,7 +95,20 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import matplotlib.pyplot as plt
+
+    for i in range(10):
+
+        a = A.HorizontalFlip(p=0.5)
+        img = imread(r'data\train\0A3B10OZ9S.jpg')
+        blob = a(image=img, mask=img)
+        image, mask = blob['image'], blob['mask']
+
+        plt.subplot(121)
+        plt.imshow(image)
+        plt.subplot(122)
+        plt.imshow(mask)
+        plt.show()
 '''
 [0.40464398, 0.42690134, 0.39236653]
 [0.20213476, 0.18353915, 0.17596193]

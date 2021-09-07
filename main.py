@@ -40,7 +40,7 @@ def train(epoch, net, train_loader, criterion, opt, device, optimizer, log, writ
         labels = labels.to(device)
 
         optimizer.zero_grad()
-        output = net(images)[0]
+        output = net(images)[0].squeeze()
         loss = criterion(output, labels)
         loss.backward()
         optimizer.step()
@@ -69,7 +69,7 @@ def val(opt, epoch, net, val_loader, criterion, device, log, writer, cur_step):
         images = images.to(device)
         labels = labels.to(device)
 
-        output = net(images)[0]
+        output = net(images)[0].squeeze()
         loss = criterion(output, labels)
 
         loss_epoch = loss_epoch + loss.item() / opt.batchSize
@@ -94,7 +94,7 @@ def test(opt, net, test_loader, criterion, device, log, writer):
         images = images.to(device)
         labels = labels.to(device)
 
-        output = net(images)[0]
+        output = net(images)[0].squeeze()
         loss = criterion(output, labels)
 
         loss_epoch = loss_epoch + loss.item() / opt.batchSize
@@ -110,6 +110,11 @@ def test(opt, net, test_loader, criterion, device, log, writer):
     log.info("Test: Loss {:.4f}".format(loss_epoch))
 
     return loss_epoch
+
+def loss_fn(y_pred, y_true):
+    bce = nn.BCEWithLogitsLoss()(y_pred, y_true)
+    dice = DiceLoss()(y_pred, y_true)
+    return 0.8*bce+ 0.2*dice
 
 def main():
     parser = argparse.ArgumentParser()
@@ -212,7 +217,7 @@ def main():
     # print(train_dataset[0][1].shape)
     # sys.exit()
 
-    criterion = DiceLoss()
+    criterion = loss_fn
 
     for epoch in range(opt.niter):
         if epoch > 90:
@@ -229,7 +234,7 @@ def main():
         cur_step = (epoch + 1) * len(train_loader)
         val_loss = val(opt, epoch, net, val_loader, criterion, device, log, writer, cur_step)
 
-        if epoch % 10 == 0:
+        if epoch % 10 == 0 or epoch == opt.niter - 1:
             # do checkpointing
             torch.save(net.state_dict(), "exps/%s/checkpoints/epoch_%d.pth" %
                         (opt.exp_name, epoch))

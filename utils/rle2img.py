@@ -1,6 +1,4 @@
 import numpy as np
-import pandas as pd
-import cv2
 
 # 将图片编码为rle格式
 def rle_encode(im):
