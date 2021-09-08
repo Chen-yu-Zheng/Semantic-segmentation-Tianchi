@@ -1,7 +1,5 @@
-""" Full assembly of the parts to form the complete network """
 
 from backbones.unet_parts import *
-
 
 class UNet(nn.Module):
     def __init__(self, n_channels, n_classes, bilinear=True):
@@ -34,3 +32,7 @@ class UNet(nn.Module):
         x = self.up4(x, x1)
         logits = self.outc(x)
         return logits
+
+if __name__ == '__main__':
+    net = UNet(3,1,True)
+    print(net)
