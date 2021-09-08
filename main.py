@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
 import torch.backends.cudnn as cudnn
 
-from models.fcn import FCN8s
+from models.unet import UNet
 
 from dataset import get_TianchiDataset
 
@@ -40,7 +40,9 @@ def train(epoch, net, train_loader, criterion, opt, device, optimizer, log, writ
         labels = labels.to(device)
 
         optimizer.zero_grad()
-        output = net(images)[0].squeeze()
+        # FCN
+        # output = net(images)[0].squeeze()
+        output = net(images).squeeze()
         loss = criterion(output, labels)
         loss.backward()
         optimizer.step()
@@ -69,7 +71,9 @@ def val(opt, epoch, net, val_loader, criterion, device, log, writer, cur_step):
         images = images.to(device)
         labels = labels.to(device)
 
-        output = net(images)[0].squeeze()
+        # FCN
+        # output = net(images)[0].squeeze()
+        output = net(images).squeeze()
         loss = criterion(output, labels)
 
         loss_epoch = loss_epoch + loss.item() / opt.batchSize
@@ -94,7 +98,9 @@ def test(opt, net, test_loader, criterion, device, log, writer):
         images = images.to(device)
         labels = labels.to(device)
 
-        output = net(images)[0].squeeze()
+        # FCN
+        #output = net(images)[0].squeeze()
+        output = net(images).squeeze()
         loss = criterion(output, labels)
 
         loss_epoch = loss_epoch + loss.item() / opt.batchSize
@@ -206,7 +212,7 @@ def main():
     test_loader = DataLoader(dataset=test_dataset, batch_size=opt.batchSize,\
                                                 shuffle=False, num_workers=int(opt.workers)) 
     
-    net = FCN8s(nclass= 1)
+    net = UNet(n_channels=3, n_classes=1, bilinear=True)
     net.to(device)
     print(net)
 

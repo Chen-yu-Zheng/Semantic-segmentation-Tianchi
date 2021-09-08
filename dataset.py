@@ -19,7 +19,7 @@ class TianChiDataset(D.Dataset):
 
         self.transform = A.Compose([
             A.Resize(configs.IMAGE_SIZE, configs.IMAGE_SIZE),
-            A.HorizontalFlip(p=0.5),
+            # A.HorizontalFlip(p=0.5),
             # A.VerticalFlip(p=0.5),
             # A.RandomRotate90()
         ])
@@ -95,21 +95,8 @@ def main():
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-
-    for i in range(10):
-
-        a = A.HorizontalFlip(p=0.5)
-        img = imread(r'data\train\0A3B10OZ9S.jpg')
-        blob = a(image=img, mask=img)
-        image, mask = blob['image'], blob['mask']
-
-        plt.subplot(121)
-        plt.imshow(image)
-        plt.subplot(122)
-        plt.imshow(mask)
-        plt.show()
-'''
-[0.40464398, 0.42690134, 0.39236653]
-[0.20213476, 0.18353915, 0.17596193]
-'''
+    main()
+    '''
+    [0.40464398, 0.42690134, 0.39236653]
+    [0.20213476, 0.18353915, 0.17596193]
+    '''

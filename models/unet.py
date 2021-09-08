@@ -1,5 +1,5 @@
 
-from backbones.unet_parts import *
+from models.backbones.unet_parts import *
 
 class UNet(nn.Module):
     def __init__(self, n_channels, n_classes, bilinear=True):
@@ -35,4 +35,7 @@ class UNet(nn.Module):
 
 if __name__ == '__main__':
     net = UNet(3,1,True)
-    print(net)
+    img = torch.rand((3,3,32,32))
+    out = net(img).squeeze()
+    print(out)
+    print(out.shape)
