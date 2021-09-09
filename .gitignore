@@ -3,3 +3,4 @@ utils/__pycache__
 __pycache__
 exps
 try.py
+results/*.csv
