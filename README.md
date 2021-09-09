@@ -12,11 +12,16 @@ H：HorizontalFlip
 
 V：VerticalFlip
 
-R：RandomRotate90
+Ro：RandomRotate90
 
-|  Method   | Score  |
-| :-------: | :----: |
-|    FCN    | 0.7582 |
-|   FCN+H   | 0.7625 |
-| FCN+H+V+R | 0.7572 |
+Re：Resize（推理时将原图片Resize成256然后输入，最后插值获得结果，不然最后结果超过20M（似乎更精细））
+
+|   Method   | Score  |
+| :--------: | :----: |
+|    FCN     | 0.7582 |
+|   FCN+H    | 0.7625 |
+| FCN+H+V+Ro | 0.7572 |
+|  U-net+R   | 0.8641 |
+
+
 
