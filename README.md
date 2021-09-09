@@ -33,4 +33,4 @@ Re：Resize（推理时将原图片Resize成256然后输入，最后插值获得
 
 * U-net + R
 
-  ![FCN](/results/U-net_Re.png)
+![FCN](/results/U-net_Re.png)
