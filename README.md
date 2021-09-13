@@ -34,16 +34,16 @@ ReL：Resize（推理时将原图片Resize成256然后输入，最后双线性�
 
 * FCN + H
 
-![FCN](/results/FCN.png)
+![FCN](results/FCN.png)
 
 * FCN + H + ReN
 
-![FCN](/results/FCN_ReN.png)
+![FCN](results/FCN_ReN.png)
 
 * U-net
 
-![FCN](/results/U-net.png)
+![FCN](results/U-net.png)
 
 * U-net + ReN
 
-![Unet](/results/U-net_Re.png)
+![Unet](results/U-net_Re.png)
