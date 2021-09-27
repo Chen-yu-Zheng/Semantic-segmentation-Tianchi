@@ -1,4 +1,3 @@
-from matplotlib.pyplot import imread
 import torch
 import cv2
 from utils.rle2img import *
