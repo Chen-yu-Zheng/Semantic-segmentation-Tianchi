@@ -96,7 +96,7 @@ def val(opt, epoch, net, val_loader, criterion, device, log, writer, cur_step):
 
         # FCN
         # output = net(images)[0].squeeze()
-        output, main_loss, dice_loss = net(images)
+        output, main_loss, dice_loss = net(images, labels)
         loss = 0.8 * main_loss + 0.2 * dice_loss
 
         batch = labels.shape[0]
@@ -133,7 +133,7 @@ def test(opt, net, test_loader, criterion, device, log, writer):
 
         # FCN
         #output = net(images)[0].squeeze()
-        output, main_loss, dice_loss = net(images)
+        output, main_loss, dice_loss = net(images, labels)
         loss = 0.8 * main_loss + 0.2 * dice_loss
 
         batch = labels.shape[0]

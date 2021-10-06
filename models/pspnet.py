@@ -84,7 +84,7 @@ class PSPNet(nn.Module):
                 nn.Conv2d(256, self.classes, kernel_size=1)
             )
 
-    def forward(self, x, y=None):
+    def forward(self, x, y):
         x_size = x.size()
         assert (x_size[2]-1) % 8 == 0 and (x_size[3]-1) % 8 == 0
         h = int((x_size[2] - 1) / 8 * self.zoom_factor + 1)
@@ -118,6 +118,7 @@ class PSPNet(nn.Module):
                 return x.max(1)[1], main_loss, aux_loss, dice_loss
             else:
                 return (x >= 0.5), main_loss, aux_loss, dice_loss
+
         else:
             #不是训练时要另外算loss，即没有辅助Loss
             main_loss = self.criterion(x, y)
