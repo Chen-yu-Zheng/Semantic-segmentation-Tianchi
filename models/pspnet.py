@@ -1,12 +1,10 @@
 import torch
 from torch import nn
-from torch._C import DisableTorchFunction
 import torch.nn.functional as F
 
-import backbones.resnet as models
+import models.backbones.resnet as resnets
 
-import sys
-
+from utils.loss import DiceLoss
 
 class PPM(nn.Module):
     def __init__(self, in_dim, reduction_dim, bins):
@@ -39,13 +37,14 @@ class PSPNet(nn.Module):
         self.zoom_factor = zoom_factor
         self.use_ppm = use_ppm
         self.criterion = criterion
+        self.classes = classes
 
         if layers == 50:
-            resnet = models.resnet50(pretrained=pretrained)
+            resnet = resnets.resnet50(pretrained=pretrained)
         elif layers == 101:
-            resnet = models.resnet101(pretrained=pretrained)
+            resnet = resnets.resnet101(pretrained=pretrained)
         else:
-            resnet = models.resnet152(pretrained=pretrained)
+            resnet = resnets.resnet152(pretrained=pretrained)
         self.layer0 = nn.Sequential(resnet.conv1, resnet.bn1, resnet.relu, resnet.maxpool)
         self.layer1, self.layer2, self.layer3, self.layer4 = resnet.layer1, resnet.layer2, resnet.layer3, resnet.layer4
 
@@ -74,7 +73,7 @@ class PSPNet(nn.Module):
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
             nn.Dropout2d(p=dropout),
-            nn.Conv2d(512, classes, kernel_size=1)
+            nn.Conv2d(512, self.classes, kernel_size=1)
         )
         if self.training:
             self.aux = nn.Sequential(
@@ -82,7 +81,7 @@ class PSPNet(nn.Module):
                 nn.BatchNorm2d(256),
                 nn.ReLU(inplace=True),
                 nn.Dropout2d(p=dropout),
-                nn.Conv2d(256, classes, kernel_size=1)
+                nn.Conv2d(256, self.classes, kernel_size=1)
             )
 
     def forward(self, x, y=None):
@@ -101,21 +100,37 @@ class PSPNet(nn.Module):
         x = self.cls(x)
         if self.zoom_factor != 1:
             x = F.interpolate(x, size=(h, w), mode='bilinear', align_corners=True)
+        
+        x = x.squeeze()
 
         if self.training:
             aux = self.aux(x_tmp)
             if self.zoom_factor != 1:
                 aux = F.interpolate(aux, size=(h, w), mode='bilinear', align_corners=True)
+            
+            aux = aux.squeeze()
             main_loss = self.criterion(x, y)
             aux_loss = self.criterion(aux, y)
-            return x.max(1)[1], main_loss, aux_loss
+            dice_loss = DiceLoss()(x, y)
+
+            if self.classes > 1:
+                #返回最大值对应的索引值
+                return x.max(1)[1], main_loss, aux_loss, dice_loss
+            else:
+                return (x >= 0.5), main_loss, aux_loss, dice_loss
         else:
-            return x
+            #不是训练时要另外算loss，即没有辅助Loss
+            main_loss = self.criterion(x, y)
+            dice_loss = DiceLoss()(x, y)
+
+            if self.classes > 1:
+                #返回最大值对应的索引值
+                return x.max(1)[1], main_loss, dice_loss
+            else:
+                return (x >= 0.5), main_loss, dice_loss
 
 
 if __name__ == '__main__':
-    import os
-    os.environ["CUDA_VISIBLE_DEVICES"] = '0, 1'
     input = torch.rand(4, 3, 257, 257).cuda()
     model = PSPNet(layers=50, bins=(1, 2, 3, 6), dropout=0.1, classes=1, zoom_factor=8, use_ppm=True, pretrained=True).cuda()
     model.eval()

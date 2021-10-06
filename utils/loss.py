@@ -208,5 +208,5 @@ class DiceLoss(nn.Module):
         intersection = (m1 * m2)
  
         score =  (2. * intersection.sum(1) + smooth) / (m1.sum(1) + m2.sum(1) + smooth)
-        score = 1 - score.sum() / num
-        return score
+        diceloss = 1 - score.sum() / num
+        return diceloss

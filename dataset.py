@@ -1,3 +1,4 @@
+from utils.figure import figureImgandMask
 import torch
 import cv2
 from utils.rle2img import *
@@ -6,6 +7,8 @@ from torch.utils import data as D
 import configs
 import albumentations as A
 import pandas as pd
+
+import matplotlib.pyplot as plt
 
 
 class TianChiDataset(D.Dataset):
@@ -18,9 +21,10 @@ class TianChiDataset(D.Dataset):
 
         self.transform = A.Compose([
             A.Resize(configs.IMAGE_SIZE, configs.IMAGE_SIZE),
-            # A.HorizontalFlip(p=0.5),
-            # A.VerticalFlip(p=0.5),
-            # A.RandomRotate90()
+            # A.RandomCrop(configs.IMAGE_SIZE, configs.IMAGE_SIZE),
+            A.HorizontalFlip(p=0.5),
+            A.VerticalFlip(p=0.5),
+            A.RandomRotate90(p=0.5)
         ])
 
         self.transform_img = T.Compose([
@@ -33,12 +37,27 @@ class TianChiDataset(D.Dataset):
     # get data operation
     def __getitem__(self, index):
         img = cv2.imread(self.paths[index])
+        #cv2 导入的是BGR形式
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
         if not self.test_mode:
             mask = rle_decode(self.rles[index])
             augments = self.transform(image=img, mask=mask)
 
+            # print('after alum')
+            # plt.figure()
+            # plt.subplot(121)
+            # plt.imshow(augments['image'])
+            # plt.subplot(122)
+            # plt.imshow(augments['mask'])
+            # plt.show()
+
             img = self.transform_img(augments['image'])
             mask = self.transform_mask(augments['mask']).float()
+
+            # print('after transform')
+            # figureImgandMask(img, mask, 1)
+
             return img, mask
         else:
             return self.transform_img(img), ''        
