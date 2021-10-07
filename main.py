@@ -4,7 +4,7 @@ import yaml
 import logging
 import time
 import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = '2, 1'
+os.environ["CUDA_VISIBLE_DEVICES"] = '2, 1'
 import sys
 import glob
 

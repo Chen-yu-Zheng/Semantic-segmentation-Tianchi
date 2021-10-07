@@ -117,7 +117,7 @@ class PSPNet(nn.Module):
                 #返回最大值对应的索引值
                 return x.max(1)[1], main_loss, aux_loss, dice_loss
             else:
-                return (x >= 0.5), main_loss, aux_loss, dice_loss
+                return (x >= 0), main_loss, aux_loss, dice_loss
 
         else:
             #不是训练时要另外算loss，即没有辅助Loss
@@ -128,7 +128,8 @@ class PSPNet(nn.Module):
                 #返回最大值对应的索引值
                 return x.max(1)[1], main_loss, dice_loss
             else:
-                return (x >= 0.5), main_loss, dice_loss
+                #便于与之前一致进行最后结果的推理
+                return x, main_loss, dice_loss
 
 
 if __name__ == '__main__':

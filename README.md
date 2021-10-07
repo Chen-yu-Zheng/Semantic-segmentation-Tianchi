@@ -20,13 +20,14 @@ ReN：Resize（推理时将原图片Resize成256然后输入，最后最近邻�
 
 ReL：Resize（推理时将原图片Resize成256然后输入，最后双线性插值获得结果）
 
-|   Method   |   Score    |
-| :--------: | :--------: |
-|    FCN     |   0.7582   |
-|   FCN+H    |   0.7625   |
-| FCN+H+ReN  | **0.7980** |
-| FCN+H+V+Ro |   0.7572   |
-| U-net+ReN  | **0.8641** |
+|      Method       |   Score    |
+| :---------------: | :--------: |
+|        FCN        |   0.7582   |
+|       FCN+H       |   0.7625   |
+|     FCN+H+ReN     | **0.7980** |
+|    FCN+H+V+Ro     |   0.7572   |
+|     U-net+ReN     | **0.8641** |
+| PSPNet+H+V+Ro+ReN |   0.5696   |
 
 
 
@@ -47,3 +48,7 @@ ReL：Resize（推理时将原图片Resize成256然后输入，最后双线性�
 * U-net + ReN
 
 ![Unet](results/U-net_Re.png)
+
+* PSPNet+H+V+Ro+ReN
+
+![Unet](results/PSPNet.png)
