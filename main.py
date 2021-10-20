@@ -273,9 +273,11 @@ def main():
 
     for epoch in range(opt.niter):
         if epoch > 90:
-            optimizer = optim.SGD(net.parameters(), lr=configs.LR / 25, momentum=0.9, weight_decay=0.0005)
+            optimizer = optim.SGD(net.parameters(), lr=configs.LR / (5**3), momentum=0.9, weight_decay=0.0005)
         elif epoch > 60:
-            optimizer = optim.SGD(net.parameters(), lr=configs.LR / 5, momentum=0.9, weight_decay=0.0005)
+            optimizer = optim.SGD(net.parameters(), lr=configs.LR / (5**2), momentum=0.9, weight_decay=0.0005)
+        elif epoch > 30:
+            optimizer = optim.SGD(net.parameters(), lr=configs.LR / (5), momentum=0.9, weight_decay=0.0005)
         else:
             optimizer = optim.SGD(net.parameters(), lr=configs.LR, momentum=0.9, weight_decay=0.0005)
 

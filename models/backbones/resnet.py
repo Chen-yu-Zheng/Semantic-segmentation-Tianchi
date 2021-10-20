@@ -219,7 +219,7 @@ def resnet152(pretrained=False, **kwargs):
 
 
 if __name__ == '__main__':
-    import torch
-    img = torch.randn(4, 3, 224, 224)
     model = resnet50(True)
-    print(model)
+    for n, m in model.layer3.named_modules():
+        print(n, '------', m)
+        
