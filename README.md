@@ -18,8 +18,6 @@ Ro：RandomRotate90
 
 ReN：Resize（推理时将原图片Resize成256然后输入，最后最近邻插值获得结果）
 
-ReL：Resize（推理时将原图片Resize成256然后输入，最后双线性插值获得结果）
-
 |      Method       |   Score    |
 | :---------------: | :--------: |
 |        FCN        |   0.7582   |
